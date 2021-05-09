@@ -73,6 +73,8 @@ ui <- fluidPage(
                 tabPanel(uiOutput("title_panel2"),
                          fluidRow(
                            dataTableOutput("kostn_tafla"),
+                           br(),
+                           br(),
                            dataTableOutput("losun_tafla")
                          )
                          

@@ -270,7 +270,7 @@ server <- function(input, output, session){
   
   lostafla <- reactive({
     
-    jaja <-  tibble("Kostnaður" = c("Losun vegna framleiðslu", "Losun vegna dreifingar", "Losun vegna flutnings"),
+    jaja <-  tibble("Losun" = c("Losun vegna framleiðslu", "Losun vegna dreifingar", "Losun vegna flutnings"),
                     "Lifrænn" = c(temp2()%>%filter(tegundir == input$aburdur & name=="innk_los")%>%pull()%>%round(),
                                   temp2()%>%filter(tegundir == input$aburdur & name=="dreif_los")%>%pull()%>%round(),
                                   temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round()
