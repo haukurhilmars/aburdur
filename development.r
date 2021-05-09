@@ -53,8 +53,8 @@ ui <- fluidPage(
     sliderInput("km_tilbuinn",label="Tilbúinn áburður flutningur að uppgræðslusvæði (km)", min=10, max=300, value=100, step=10),
     
     br(),
-    tags$img(src = "land.jpg",width=80, height=80),
-    tags$img(src = "efla_hreint.jpg",width=80, height=25)
+    tags$img(src = "land.png",width=80, height=80),
+    tags$img(src = "EFLA_hreint.png",width=80*1.25, height=25*1.25)
     
   ),
   
