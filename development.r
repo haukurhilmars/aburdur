@@ -85,7 +85,11 @@ ui <- fluidPage(
                          ),
                 tabPanel("Ítarlegar upplýsingar",
                          fluidRow(
-                           dataTableOutput("fors_grunn")
+                           dataTableOutput("fors_grunn"),
+                           br(),
+                           dataTableOutput("flutn"),
+                           br(),
+                           dataTableOutput("dreif")
                          )
                 ),
                 tabPanel("Samanburður við aðrar áburðartegundir",
@@ -509,7 +513,7 @@ server <- function(input, output, session){
   #Ítarleg tafla
   forsendur_grunnur <- reactive({
     temp <- tibble(
-      Tegund = c("Stærð landsvæðis (Hektarar)", "Niturviðmið (kg N/hektara)", "Niturhlutfall áburðar (%)",
+      "Forsendur og grunnupplýsingar" = c("Stærð landsvæðis (Hektarar)", "Niturviðmið (kg N/hektara)", "Niturhlutfall áburðar (%)",
                  "Tonn/hektara til þess að uppfylla niturviðmið", "Heildarmagn (tonn)", "Fjöldi dreifinga",
                  "Magn áburðar í hverri drefingu (tonn)"),
       Lifrænn = c(input$hekt, input$nitur, data_manip()%>%filter(aburdur == input$aburdur)%>%select(N)%>%pull(),
@@ -517,22 +521,70 @@ server <- function(input, output, session){
                   data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000
                   ),
       "Tilbúinn Áburður" = c(input$hekt, input$nitur, data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(N)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_hekt)%>%pull()/1000,data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_kg)%>%pull()/1000, data_manip()%>%filter(aburdur =="Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()/1000
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_hekt)%>%pull()/1000,data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_kg)%>%pull()%>%round()/1000, data_manip()%>%filter(aburdur =="Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000
       )
     )
     colnames(temp)[which(colnames(temp)=="Lifrænn")]=input$aburdur
     temp
   })
   
-  #Innkaup og flutn
+  flutningur <- reactive({
+    temp <- tibble(
+      "Flutningur" = c("Flutningsmáti", "Magn í hverri ferð (tonn)", "Fjöldi ferða", "Fjöldi ekinna km"),
+      Lifrænn = c(data_manip()%>%filter(aburdur == input$aburdur)%>%select(flutningsadferd)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_per_flutn)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_flutningur)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_km)%>%pull()),
+      "Tilbúinn áburður" = c(data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(flutningsadferd)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_per_flutn)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_ferda_flutningur)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_km)%>%pull())
+    )
+    colnames(temp)[which(colnames(temp)=="Lifrænn")]=input$aburdur
+    temp
+  })
   
-  #Dreifing
+  dreifing <- reactive({
+    temp <- tibble(
+      "Dreifing" = c("Dreifingarmáti", "Fjöldi dreifinga", "Magn í dreifingu (tonn)", "Dreifibreidd", "Meðalhraði", "Hektarar á klukkustund", "Magn á tæki (tonn)",
+                     "Fjöldi áfyllinga", "Heildartími (klst)", "Kostnaður við ámokstur"),
+      Lifrænn = c(data_manip()%>%filter(aburdur == input$aburdur)%>%select(teg_dreif)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_dreifing)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000,
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(dreifibreidd)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(medalhradi_dreif)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(hekt_per_klst)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_per_dreif)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_afyllinga)%>%pull()%>%round(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(heildartimi)%>%pull()%>%round(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kostn_amokstur)%>%pull()%>%round()),
+      "Tilbúinn áburður" = c(data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(teg_dreif)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000,
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(dreifibreidd)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(medalhradi_dreif)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(hekt_per_klst)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_per_dreif)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_afyllinga)%>%pull()%>%round(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(heildartimi)%>%pull()%>%round(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kostn_amokstur)%>%pull()%>%round())
+    )
+    colnames(temp)[which(colnames(temp)=="Lifrænn")]=input$aburdur
+    temp
+  })
   
   output$fors_grunn <- renderDataTable(datatable(forsendur_grunnur(), class='hover', rownames = FALSE,
                                                         options=list(dom='t'))
   )
 
+  output$flutn <- renderDataTable(datatable(flutningur(), class='hover', rownames = FALSE,
+                                                 options=list(dom='t'))
+  )
+  
+  output$dreif <- renderDataTable(datatable(dreifing(), class='hover', rownames = FALSE,
+                                            options=list(dom='t'))
+  )
 }
 
 

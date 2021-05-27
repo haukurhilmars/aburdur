@@ -38,24 +38,25 @@ ui <- fluidPage(
                 )),
     br(),
     
-    sliderInput("hekt","Stærð Uppgræðslusvæðis", min=10, max=200, value=100, step=10),
+    sliderInput("hekt","Stærð uppgræðslusvæðis (ha)", min=0, max=200, value=100, step=10),
     
     br(),
     
-    sliderInput("nitur", "Viðmið-Köfnunarefni\n(kg N/ha.)", min=10, max=300, value=200, step=10),
+    sliderInput("nitur", "Viðmið-Köfnunarefni\n(kg N/ha)", min=0, max=200, value=50, step=10),
     
     br(),
     
-    sliderInput("km_lifraenn", "Lífrænn áburður flutningur að uppgræðslusvæði (km)", min=10, max=300, value=100, step=10),
+    sliderInput("km_lifraenn", "Lífrænn áburður flutningur að uppgræðslusvæði (km)", min=0, max=300, value=100, step=10),
     
     br(),
     
-    sliderInput("km_tilbuinn",label="Tilbúinn áburður flutningur að uppgræðslusvæði (km)", min=10, max=300, value=100, step=10),
+    sliderInput("km_tilbuinn",label="Tilbúinn áburður flutningur að uppgræðslusvæði (km)", min=0, max=300, value=100, step=10),
     
     br(),
-    tags$img(src = "land.png",width=80, height=80),
-    tags$img(src = "EFLA_hreint.png",width=80*1.25, height=25*1.25)
-    
+    HTML('<center><img src="land.png" width="250" height="200"></center>'),
+    #tags$img(src = "",width=80*1.5, height=80*1.5),
+    #tags$img(src = "EFLA_hreint.png",width=80*1.25, height=25*1.25)
+    HTML('<center><img src="EFLA_hreint.png" width="100*1.4" height="30*1.4"></center>')
   ),
   
   column(
@@ -72,12 +73,24 @@ ui <- fluidPage(
                 ),
                 tabPanel(uiOutput("title_panel2"),
                          fluidRow(
-                           dataTableOutput("kostn_tafla"),
+                           dataTableOutput("kostn_tafla_hekt"),
                            br(),
+                           dataTableOutput("losun_tafla_hekt"),
                            br(),
-                           dataTableOutput("losun_tafla")
+                           dataTableOutput("kostn_tafla_heild"),
+                           br(),
+                           dataTableOutput("losun_tafla_heild")
                          )
                          
+                ),
+                tabPanel("Ítarlegar upplýsingar",
+                         fluidRow(
+                           dataTableOutput("fors_grunn"),
+                           br(),
+                           dataTableOutput("flutn"),
+                           br(),
+                           dataTableOutput("dreif")
+                         )
                 ),
                 tabPanel("Samanburður við aðrar áburðartegundir",
                          fluidRow(
@@ -91,3 +104,4 @@ ui <- fluidPage(
   )
   
 )
+
