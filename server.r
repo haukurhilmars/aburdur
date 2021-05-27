@@ -216,15 +216,15 @@ server <- function(input, output, session){
     
     plot_ly(plot_df_kost(), x=~tegundir, y=~flutn_kost, type='bar', name='Flutningskostnaður',hoverinfo = 'text',
             text="Kostnaður við flutning",
-            marker = list(color='rgb(5,166,107)',line=list(color = 'rgb(0,0,0)', width=1.25)))%>%
+            marker = list(color='rgb(5,166,107)',line=list(color = 'rgb(5,166,107)', width=0)))%>%
       add_trace(y = ~dreif_kost, name="Dreifingarkostnaður",hoverinfo = 'text',
                 text="Kostnaður við dreifingu",
                 marker=list(color='rgb(247,245,173)',
-                            line=list(color = 'rgb(0,0,0)', width=1.25)))%>%
+                            line=list(color = 'rgb(247,245,173)', width=0)))%>%
       add_trace(y = ~innk_kost, name = "Innkaupakostnaður",hoverinfo = 'text',
                 text="Kostnaður við innkaup", 
                 marker=list(color='rgb(32,40,21)',
-                            line=list(color = 'rgb(0,0,0)', width=1.25)))%>%
+                            line=list(color = 'rgb(32,40,21)', width=0)))%>%
       layout(yaxis =list(title="Kostnaður"), 
              xaxis = list(title = "Tegund áburðar"),
              barmode='stack',
@@ -245,15 +245,15 @@ server <- function(input, output, session){
     
     plot_ly(plot_df_los(), x=~tegundir, y=~flutn_los, type='bar', name='Losun vegna flutnings',hoverinfo = 'text',
             text="Losun vegna flutnings",
-            marker = list(color='rgb(5,166,107)',line=list(color = 'rgb(0,0,0)', width=1.25)))%>%
+            marker = list(color='rgb(5,166,107)',line=list(color = 'rgb(5,166,107)', width=0)))%>%
       add_trace(y = ~dreif_los, name="Losun vegna dreifingar",hoverinfo = 'text',
                 text="Losun vegna dreifingar",
                 marker=list(color='rgb(247,245,173)',
-                            line=list(color = 'rgb(0,0,0)', width=1.25)))%>%
+                            line=list(color = 'rgb(247,245,173)', width=0)))%>%
       add_trace(y = ~innk_los, name = "Losun vegna framleiðslu",hoverinfo = 'text',
                 text="Losun vegna framleiðslu",
                 marker=list(color='rgb(32,40,21)',
-                            line=list(color = 'rgb(0,0,0)', width=1.25)))%>%
+                            line=list(color = 'rgb(32,40,21)', width=0)))%>%
       layout(yaxis =list(title= "Kg CO2 ígildi"),
              xaxis = list(title = "Tegund áburðar"),
              barmode='stack',
@@ -280,6 +280,7 @@ server <- function(input, output, session){
       mutate(valinn = ifelse(aburdur == input$aburdur,1,0))
   })
   
+  
   output$allir_mynd <- renderPlotly({
     
     plot_ly(filter(big_plot_df(),valinn==0), x=~heildarlosun, y=~heildarkostn, type="scatter",
@@ -294,12 +295,41 @@ server <- function(input, output, session){
                               color = 'rgb(5,166,107)',
                               line = list(color = 'rgba(0, 0, 0, 1)',
                                           width = 2)))%>%
+      add_annotations(
+        x=filter(big_plot_df(),valinn==1)$heildarlosun, y=filter(big_plot_df(),valinn==1)$heildarkostn,text = filter(big_plot_df(),valinn==1)$aburdur,
+        xref = "x",
+        yref = "y",
+        showarrow = TRUE,
+        arrowhead = 4,
+        arrowsize = .5,
+        ax = 0,
+        ay = -40
+      )%>%
       layout(
         yaxis = list(zeroline = FALSE, title="Krónur"),
         xaxis = list(zeroline = FALSE, title="Kg CO2 ígildi"),
         showlegend = FALSE)
     
   })
+  
+  # output$allir_mynd <- renderPlot({
+  #   ggplot(big_plot_df(), aes(x=heildarlosun, y=heildarkostn, color=as.factor(valinn), label=aburdur))+
+  #     geom_point(size=3)+
+  #     geom_label_repel(color="black", nudge_y = max(big_plot_df()$heildarkostn)*0.2, nudge_x=max(big_plot_df()$heildarlosun)*0.05)+
+  #     scale_y_continuous(label = scales::comma_format(big.mark = ".",decimal.mark=","),
+  #                        limits = c(0, max(big_plot_df()$heildarkostn)*1.1))+
+  #     scale_x_continuous(label = scales::comma_format(big.mark = ".",decimal.mark=","),
+  #                        limits = c(0, max(big_plot_df()$heildarlosun)*1.1))+
+  #     scale_color_manual(values=c("#f7f5ad","#05a66b"))+
+  #     labs(y="Krónur",
+  #          x="Kg CO2 ígildi")+
+  #     theme_minimal()+
+  #     theme(legend.position = "none",
+  #           panel.grid.major.x= element_blank(),
+  #           axis.text= element_text(size=14, colour = "black"),
+  #           axis.title=element_text(size=18, colour = "black"))
+  # 
+  # })
   
   
   #Töflur
@@ -414,16 +444,16 @@ server <- function(input, output, session){
   #Ítarleg tafla
   forsendur_grunnur <- reactive({
     temp <- tibble(
-      "Forsendur og grunnupplýsingar" = c("Stærð landsvæðis (Hektarar)", "Niturviðmið (kg N/hektara)", "Niturhlutfall áburðar (%)",
+      "Forsendur og grunnupplýsingar" = c("Stærð landsvæðis (Hektarar)", "Niturviðmið (kg N/hektara)", "Niturprósenta áburðar (%)",
                                           "Tonn/hektara til þess að uppfylla niturviðmið", "Heildarmagn (tonn)", "Fjöldi dreifinga",
                                           "Magn áburðar í hverri drefingu (tonn)"),
       Lifrænn = c(input$hekt, input$nitur, data_manip()%>%filter(aburdur == input$aburdur)%>%select(N)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_hekt)%>%pull()%>%round()/1000,data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_kg)%>%pull()%>%round()/1000, data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_dreifing)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_hekt)%>%pull()/1000,data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_kg)%>%pull()/1000, data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_dreifing)%>%pull(),
+                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_dreift_ferd)%>%pull()/1000
       ),
       "Tilbúinn Áburður" = c(input$hekt, input$nitur, data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(N)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_hekt)%>%pull()/1000,data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_kg)%>%pull()%>%round()/1000, data_manip()%>%filter(aburdur =="Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_hekt)/1000,data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_kg)%>%pull()/1000, data_manip()%>%filter(aburdur =="Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
+                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()/1000
       )
     )
     colnames(temp)[which(colnames(temp)=="Lifrænn")]=input$aburdur
@@ -432,58 +462,63 @@ server <- function(input, output, session){
   
   flutningur <- reactive({
     temp <- tibble(
-      "Flutningur" = c("Flutningsmáti", "Magn í hverri ferð (tonn)", "Fjöldi ferða", "Fjöldi ekinna km"),
-      Lifrænn = c(data_manip()%>%filter(aburdur == input$aburdur)%>%select(flutningsadferd)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_per_flutn)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_flutningur)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_km)%>%pull()),
-      "Tilbúinn áburður" = c(data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(flutningsadferd)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_per_flutn)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_ferda_flutningur)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_km)%>%pull())
+      "Flutningur" = c("Magn í hverri ferð með ökutæki (tonn)", "Fjöldi ferða", "Fjöldi ekinna km"),
+      Lifrænn = c(
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_per_flutn)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_flutningur)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_km)%>%pull()),
+      "Tilbúinn áburður" = c(
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_per_flutn)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_ferda_flutningur)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_km)%>%pull())
     )
     colnames(temp)[which(colnames(temp)=="Lifrænn")]=input$aburdur
+    
     temp
   })
   
   dreifing <- reactive({
     temp <- tibble(
-      "Dreifing" = c("Dreifingarmáti", "Fjöldi dreifinga", "Magn í dreifingu (tonn)", "Dreifibreidd", "Meðalhraði", "Hektarar á klukkustund", "Magn á tæki (tonn)",
-                     "Fjöldi áfyllinga", "Heildartími (klst)", "Kostnaður við ámokstur"),
-      Lifrænn = c(data_manip()%>%filter(aburdur == input$aburdur)%>%select(teg_dreif)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_dreifing)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000,
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(dreifibreidd)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(medalhradi_dreif)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(hekt_per_klst)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_per_dreif)%>%pull(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_afyllinga)%>%pull()%>%round(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(heildartimi)%>%pull()%>%round(),
-                  data_manip()%>%filter(aburdur == input$aburdur)%>%select(kostn_amokstur)%>%pull()%>%round()),
-      "Tilbúinn áburður" = c(data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(teg_dreif)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()%>%round()/1000,
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(dreifibreidd)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(medalhradi_dreif)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(hekt_per_klst)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_per_dreif)%>%pull(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_afyllinga)%>%pull()%>%round(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(heildartimi)%>%pull()%>%round(),
-                             data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kostn_amokstur)%>%pull()%>%round())
+      "Dreifing" = c( "Fjöldi dreifinga", "Magn í dreifingu (tonn)", "Dreifibreidd", "Meðalhraði", "Hektarar á klukkustund", "Magn á tæki (tonn)",
+                      "Fjöldi áfyllinga", "Heildartími (klst)", "Kostnaður við ámokstur"),
+      Lifrænn = c(
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_ferda_dreifing)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(kg_dreift_ferd)%>%pull()/1000,
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(dreifibreidd)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(medalhradi_dreif)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(hekt_per_klst)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(magn_per_dreif)%>%pull(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(fj_afyllinga)%>%pull()%>%round(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(heildartimi)%>%pull()%>%round(),
+        data_manip()%>%filter(aburdur == input$aburdur)%>%select(kostn_amokstur)%>%pull()%>%round()),
+      "Tilbúinn áburður" = c(
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_ferda_dreifing)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kg_dreift_ferd)%>%pull()/1000,
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(dreifibreidd)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(medalhradi_dreif)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(hekt_per_klst)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(magn_per_dreif)%>%pull(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(fj_afyllinga)%>%pull()%>%round(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(heildartimi)%>%pull()%>%round(),
+        data_manip()%>%filter(aburdur == "Tilbúinn áburður")%>%select(kostn_amokstur)%>%pull()%>%round())
     )
     colnames(temp)[which(colnames(temp)=="Lifrænn")]=input$aburdur
+    
     temp
   })
   
   output$fors_grunn <- renderDataTable(datatable(forsendur_grunnur(), class='hover', rownames = FALSE,
-                                                 options=list(dom='t'))
+                                                 options=list(dom='t'))%>%
+                                         formatCurrency(2:3,currency="", mark = ".", dec.mark = ",", digits=1)
   )
   
   output$flutn <- renderDataTable(datatable(flutningur(), class='hover', rownames = FALSE,
-                                            options=list(dom='t'))
+                                            options=list(dom='t'))%>%
+                                    formatCurrency(2:3,currency="", mark = ".", dec.mark = ",", digits = 0)
   )
   
   output$dreif <- renderDataTable(datatable(dreifing(), class='hover', rownames = FALSE,
-                                            options=list(dom='t'))
+                                            options=list(dom='t'))%>%
+                                    formatCurrency(2:3,currency="", mark = ".", dec.mark = ",", digits=1)
   )
 }
