@@ -223,8 +223,8 @@ server <- function(input, output, session){
                             line=list(color = 'rgb(247,245,173)', width=0)))%>%
       add_trace(y = ~innk_kost, name = "Innkaupakostnaður",hoverinfo = 'text',
                 text="Kostnaður við innkaup", 
-                marker=list(color='rgb(32,40,21)',
-                            line=list(color = 'rgb(32,40,21)', width=0)))%>%
+                marker=list(color='rgb(199,207,216)',
+                            line=list(color = 'rgb(199,207,216)', width=0)))%>%
       layout(yaxis =list(title="Kostnaður"), 
              xaxis = list(title = "Tegund áburðar"),
              barmode='stack',
@@ -252,8 +252,8 @@ server <- function(input, output, session){
                             line=list(color = 'rgb(247,245,173)', width=0)))%>%
       add_trace(y = ~innk_los, name = "Losun vegna framleiðslu",hoverinfo = 'text',
                 text="Losun vegna framleiðslu",
-                marker=list(color='rgb(32,40,21)',
-                            line=list(color = 'rgb(32,40,21)', width=0)))%>%
+                marker=list(color='rgb(199,207,216)',
+                            line=list(color = 'rgb(199,207,216)', width=0)))%>%
       layout(yaxis =list(title= "Kg CO2 ígildi"),
              xaxis = list(title = "Tegund áburðar"),
              barmode='stack',
