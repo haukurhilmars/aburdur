@@ -492,23 +492,45 @@ server <- function(input, output, session){
     los_tafla
   })
   
-
+  rowCallback1 <- c(
+    "function(row, dat, displayNum, index){",
+    "  if(index == 3){",
+    "    for(var j=0; j<dat.length; j++){",
+    "      $('td:eq('+j+')', row)", 
+    "        .css('font-weight', 'bold')",
+    "        .css('background-color', '#DFDCDC')",
+    "    }",
+    "  }",
+    "}"
+  )
+  
+  rowCallback2 <- c(
+    "function(row, dat, displayNum, index){",
+    "  if(index == 4){",
+    "    for(var j=0; j<dat.length; j++){",
+    "      $('td:eq('+j+')', row)", 
+    "        .css('font-weight', 'bold')",
+    "        .css('background-color', '#DFDCDC')",
+    "    }",
+    "  }",
+    "}"
+  )
   
   output$kostn_tafla_hekt <- renderDataTable(datatable(kostntafla(), class='hover', rownames = FALSE,
-                                                       options = list(dom='t'))%>%
+                                                       options = list(dom='t', rowCallback=JS(rowCallback1)))%>%
                                                formatCurrency(2:3,currency="", mark = ".", digits=0)
   )
   output$losun_tafla_hekt <- renderDataTable(datatable(lostafla(), class='hover', rownames = FALSE,
-                                                       options=list(dom='t'))%>%
+                                                       options=list(dom='t', rowCallback=JS(rowCallback2)))%>%
                                                formatCurrency(2:3,currency="", mark = ".", digits=0)
   )
   
   output$kostn_tafla_heild <- renderDataTable(datatable(kostntafla2(), class='hover', rownames = FALSE,
-                                                        options = list(dom='t'))%>%
+                                                        options = list(dom='t', rowCallback=JS(rowCallback1)))%>%
                                                 formatCurrency(2:3,currency="", mark = ".", digits=0)
   )
   output$losun_tafla_heild <- renderDataTable(datatable(lostafla2(), class='hover', rownames = FALSE,
-                                                        options=list(dom='t'))%>%
+                                                        options=list(dom='t', rowCallback=JS(rowCallback2)))%>%
                                                 formatCurrency(2:3,currency="", mark = ".", digits=0)
   )
   
@@ -593,3 +615,4 @@ server <- function(input, output, session){
                                     formatCurrency(2:3,currency="", mark = ".", dec.mark = ",", digits=1)
   )
 }
+
