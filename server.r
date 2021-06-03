@@ -58,7 +58,9 @@ server <- function(input, output, session){
         kostn_amokstur = amokstur * kg_dreift_ferd/1000*fj_ferda_dreifing, #kostnaður við ámokstur (kr/tonn)* magn(kg)/1000*fj_dreifingarferda
         
         dreifingarkostn = kostn_dreifing+kostn_amokstur,#Kostnaður við dreifinguna + amokstur
-        co2_dreif = heildartimi*los_dreif #heildartimi*los per klst akstur
+        co2_dreif = heildartimi*los_dreif, #heildartimi*los per klst akstur
+        
+        co2_e_dreif = los_n*magn_kg #Losun vegna niturs, eftir dreifingu
       )
   })
   
@@ -133,7 +135,12 @@ server <- function(input, output, session){
       select(co2_framl)%>%
       pull()
     
-    c(flutn_los, dreif_los, innkaup_los)
+    e_dreif_los <- data_manip()%>%
+      filter(aburdur=="Tilbúinn áburður")%>%
+      select(co2_e_dreif)%>%
+      pull()
+    
+    c(flutn_los, dreif_los, innkaup_los,  e_dreif_los)
     
     
   }) 
@@ -156,16 +163,23 @@ server <- function(input, output, session){
       select(co2_framl)%>%
       pull()
     
-    c(flutn_los, dreif_los, innkaup_los)
+    e_dreif_los <-  data_manip()%>%
+      filter(aburdur==input$aburdur)%>%
+      select(co2_e_dreif)%>%
+      pull()
+    
+    c(flutn_los, dreif_los, innkaup_los, e_dreif_los)
   })
   
   flutn_los <- reactive({c(tilbuinn_los()[[1]], lifraenn_los()[[1]])})
   dreif_los <- reactive({c(tilbuinn_los()[[2]], lifraenn_los()[[2]])})
   innk_los <- reactive({c(tilbuinn_los()[[3]], lifraenn_los()[[3]])})
+  e_dreif_los <- reactive({c(tilbuinn_los()[[4]], lifraenn_los()[[4]])})
   
   
   plot_df_los <- reactive({
-    data.frame(tegundir =tegundir(), flutn_los = flutn_los(), dreif_los = dreif_los(),innk_los =  innk_los())
+    data.frame(tegundir =tegundir(), flutn_los = flutn_los(), dreif_los = dreif_los(),innk_los =  innk_los(),
+               e_dreif_los = e_dreif_los())
   })
   
   tot_magn_lifr <- reactive({
@@ -216,7 +230,7 @@ server <- function(input, output, session){
     
     plot_ly(plot_df_kost(), x=~tegundir, y=~flutn_kost, type='bar', name='Flutningskostnaður',hoverinfo = 'text',
             text="Kostnaður við flutning",
-            marker = list(color='rgb(5,166,107)',line=list(color = 'rgb(5,166,107)', width=0)))%>%
+            marker = list(color='rgb(0,0,0)',line=list(color = 'rgb(0,0,0)', width=0)))%>%
       add_trace(y = ~dreif_kost, name="Dreifingarkostnaður",hoverinfo = 'text',
                 text="Kostnaður við dreifingu",
                 marker=list(color='rgb(247,245,173)',
@@ -226,7 +240,7 @@ server <- function(input, output, session){
                 marker=list(color='rgb(199,207,216)',
                             line=list(color = 'rgb(199,207,216)', width=0)))%>%
       layout(yaxis =list(title="Kostnaður"), 
-             xaxis = list(title = "Tegund áburðar"),
+             xaxis = list(title = ""),
              barmode='stack',
              hovermode = 'compare',showlegend = FALSE)%>%
       add_annotations(x = 0.1,
@@ -245,7 +259,7 @@ server <- function(input, output, session){
     
     plot_ly(plot_df_los(), x=~tegundir, y=~flutn_los, type='bar', name='Losun vegna flutnings',hoverinfo = 'text',
             text="Losun vegna flutnings",
-            marker = list(color='rgb(5,166,107)',line=list(color = 'rgb(5,166,107)', width=0)))%>%
+            marker = list(color='rgb(0,0,0)',line=list(color = 'rgb(0,0,0)', width=0)))%>%
       add_trace(y = ~dreif_los, name="Losun vegna dreifingar",hoverinfo = 'text',
                 text="Losun vegna dreifingar",
                 marker=list(color='rgb(247,245,173)',
@@ -254,18 +268,23 @@ server <- function(input, output, session){
                 text="Losun vegna framleiðslu",
                 marker=list(color='rgb(199,207,216)',
                             line=list(color = 'rgb(199,207,216)', width=0)))%>%
+      add_trace(y = ~e_dreif_los, name = "Losun eftir dreifingu",hoverinfo = 'text',
+                text="Losun eftir dreifingu",
+                marker=list(color='rgb(5,166,107)',
+                            line=list(color = 'rgb(5,166,107)', width=0)))%>%
       layout(yaxis =list(title= "Kg CO2 ígildi"),
-             xaxis = list(title = "Tegund áburðar"),
+             xaxis = list(title = ""),
              barmode='stack',
-             hovermode = 'compare',showlegend = FALSE)%>%
-      add_annotations(x = 0.1,
-                      y=los_y_lifr()+(los_y_tilb()*0.2),
-                      text=paste0("Kg/ha: ",round(magn_hekt_lifr()),"<br>Heildarmagn: ", round(tot_magn_lifr()/1000), " tonn"),
-                      xref="paper", yref="y",showarrow=FALSE, align='left')%>%
-      add_annotations(x = 0.9,
-                      y=los_y_tilb()*1.2,
-                      text=paste0("Kg/ha: ",round(magn_hekt_tilb()),"<br>Heildarmagn: ", round(tot_magn_tilb()/1000), " tonn"),
-                      xref="paper", yref="y",showarrow=FALSE, align='right')
+             hovermode = 'compare',showlegend = FALSE)
+    # %>%
+    #   add_annotations(x = 0.1,
+    #                   y=los_y_lifr()+(los_y_tilb()*0.2),
+    #                   text=paste0("Kg/ha: ",round(magn_hekt_lifr()),"<br>Heildarmagn: ", round(tot_magn_lifr()/1000), " tonn"),
+    #                   xref="paper", yref="y",showarrow=FALSE, align='left')%>%
+    #   add_annotations(x = 0.9,
+    #                   y=los_y_tilb()*1.2,
+    #                   text=paste0("Kg/ha: ",round(magn_hekt_tilb()),"<br>Heildarmagn: ", round(tot_magn_tilb()/1000), " tonn"),
+    #                   xref="paper", yref="y",showarrow=FALSE, align='right')
     
     
   })
@@ -275,7 +294,7 @@ server <- function(input, output, session){
   big_plot_df <- reactive({
     data_manip()%>%
       mutate(heildarkostn = innkaupkostn+dreifingarkostn+flutningskostn,
-             heildarlosun = co2_framl+co2_flutn+co2_dreif)%>%
+             heildarlosun = co2_framl+co2_flutn+co2_dreif+co2_e_dreif)%>%
       select(aburdur, heildarkostn,heildarlosun)%>%
       mutate(valinn = ifelse(aburdur == input$aburdur,1,0))
   })
@@ -342,14 +361,24 @@ server <- function(input, output, session){
   
   kostntafla <- reactive({
     
-    kostn_tafla <-  tibble("Kostnaður á hektara (Kr)" = c("Kostnaður við innkaup", "Kostnaður við dreifingu", "Kostnaður við flutning"),
+    kostn_tafla <-  tibble("Kostnaður á hektara (Kr)" = c("Kostnaður við innkaup", "Kostnaður við dreifingu", "Kostnaður við flutning", "Heildarkostnaður á hektara"),
                            "Lifrænn" = c(temp1()%>%filter(tegundir == input$aburdur & name=="innk_kost")%>%pull()%>%round(),
                                          temp1()%>%filter(tegundir == input$aburdur & name=="dreif_kost")%>%pull()%>%round(),
-                                         temp1()%>%filter(tegundir == input$aburdur & name=="flutn_kost")%>%pull()%>%round()
+                                         temp1()%>%filter(tegundir == input$aburdur & name=="flutn_kost")%>%pull()%>%round(),
+                                         sum(
+                                           temp1()%>%filter(tegundir == input$aburdur & name=="innk_kost")%>%pull()%>%round(),
+                                           temp1()%>%filter(tegundir == input$aburdur & name=="dreif_kost")%>%pull()%>%round(),
+                                           temp1()%>%filter(tegundir == input$aburdur & name=="flutn_kost")%>%pull()%>%round()
+                                         )
                            ),
                            "Tilbúinn áburður" = c(temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_kost")%>%pull()%>%round(),
                                                   temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_kost")%>%pull()%>%round(),
-                                                  temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_kost")%>%pull()%>%round()
+                                                  temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_kost")%>%pull()%>%round(),
+                                                  sum(
+                                                    temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_kost")%>%pull()%>%round(),
+                                                    temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_kost")%>%pull()%>%round(),
+                                                    temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_kost")%>%pull()%>%round()
+                                                  )
                            )
     )%>%
       mutate(Lifrænn = Lifrænn/input$hekt,
@@ -362,14 +391,24 @@ server <- function(input, output, session){
   
   kostntafla2 <- reactive({
     
-    kostn_tafla <-  tibble("Heildarkostnaður (Kr)" = c("Kostnaður við innkaup", "Kostnaður við dreifingu", "Kostnaður við flutning"),
+    kostn_tafla <-  tibble("Heildarkostnaður (Kr)" = c("Kostnaður við innkaup", "Kostnaður við dreifingu", "Kostnaður við flutning", "Heildarkostnaður"),
                            "Lifrænn" = c(temp1()%>%filter(tegundir == input$aburdur & name=="innk_kost")%>%pull()%>%round(),
                                          temp1()%>%filter(tegundir == input$aburdur & name=="dreif_kost")%>%pull()%>%round(),
-                                         temp1()%>%filter(tegundir == input$aburdur & name=="flutn_kost")%>%pull()%>%round()
+                                         temp1()%>%filter(tegundir == input$aburdur & name=="flutn_kost")%>%pull()%>%round(),
+                                         sum(
+                                           temp1()%>%filter(tegundir == input$aburdur & name=="innk_kost")%>%pull()%>%round(),
+                                           temp1()%>%filter(tegundir == input$aburdur & name=="dreif_kost")%>%pull()%>%round(),
+                                           temp1()%>%filter(tegundir == input$aburdur & name=="flutn_kost")%>%pull()%>%round()
+                                         )
                            ),
                            "Tilbúinn áburður" = c(temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_kost")%>%pull()%>%round(),
                                                   temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_kost")%>%pull()%>%round(),
-                                                  temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_kost")%>%pull()%>%round()
+                                                  temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_kost")%>%pull()%>%round(),
+                                                  sum(
+                                                    temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_kost")%>%pull()%>%round(),
+                                                    temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_kost")%>%pull()%>%round(),
+                                                    temp1()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_kost")%>%pull()%>%round()
+                                                  )
                            )
     )
     
@@ -387,14 +426,30 @@ server <- function(input, output, session){
   
   lostafla <- reactive({
     
-    los_tafla <-  tibble("Losun á hektara (Kg CO2 ígildi)" = c("Losun vegna framleiðslu", "Losun vegna dreifingar", "Losun vegna flutnings"),
+    los_tafla <-  tibble("Losun á hektara (Kg CO2 ígildi)" = c("Losun vegna framleiðslu", "Losun vegna dreifingar", "Losun vegna flutnings", "Losun eftir dreifingu", "Heildarlosun á hektara"),
                          "Lifrænn" = c(temp2()%>%filter(tegundir == input$aburdur & name=="innk_los")%>%pull()%>%round(),
                                        temp2()%>%filter(tegundir == input$aburdur & name=="dreif_los")%>%pull()%>%round(),
-                                       temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round()
+                                       temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round(),
+                                       temp2()%>%filter(tegundir == input$aburdur & name=="e_dreif_los")%>%pull()%>%round(),
+                                       sum(
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="innk_los")%>%pull()%>%round(),
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="dreif_los")%>%pull()%>%round(),
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round(),
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="e_dreif_los")%>%pull()%>%round()
+                                       )
+                                       
                          ),
                          "Tilbúinn áburður" = c(temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_los")%>%pull()%>%round(),
                                                 temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_los")%>%pull()%>%round(),
-                                                temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_los")%>%pull()%>%round()
+                                                temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_los")%>%pull()%>%round(),
+                                                temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="e_dreif_los")%>%pull()%>%round(),
+                                                sum(
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_los")%>%pull()%>%round(),
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_los")%>%pull()%>%round(),
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_los")%>%pull()%>%round(),
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="e_dreif_los")%>%pull()%>%round()
+                                                )
+                                                
                          )
     )%>%
       mutate(Lifrænn = Lifrænn/input$hekt,
@@ -407,14 +462,28 @@ server <- function(input, output, session){
   
   lostafla2 <- reactive({
     
-    los_tafla <-  tibble("Heildarlosun (Kg CO2 ígildi)" = c("Losun vegna framleiðslu", "Losun vegna dreifingar", "Losun vegna flutnings"),
+    los_tafla <-  tibble("Heildarlosun (Kg CO2 ígildi)" = c("Losun vegna framleiðslu", "Losun vegna dreifingar", "Losun vegna flutnings", "Losun eftir dreifingu", "Heildarlosun"),
                          "Lifrænn" = c(temp2()%>%filter(tegundir == input$aburdur & name=="innk_los")%>%pull()%>%round(),
                                        temp2()%>%filter(tegundir == input$aburdur & name=="dreif_los")%>%pull()%>%round(),
-                                       temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round()
+                                       temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round(),
+                                       temp2()%>%filter(tegundir == input$aburdur & name=="e_dreif_los")%>%pull()%>%round(),
+                                       sum(
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="innk_los")%>%pull()%>%round(),
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="dreif_los")%>%pull()%>%round(),
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="flutn_los")%>%pull()%>%round(),
+                                         temp2()%>%filter(tegundir == input$aburdur & name=="e_dreif_los")%>%pull()%>%round()
+                                       )
                          ),
                          "Tilbúinn áburður" = c(temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_los")%>%pull()%>%round(),
                                                 temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_los")%>%pull()%>%round(),
-                                                temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_los")%>%pull()%>%round()
+                                                temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_los")%>%pull()%>%round(),
+                                                temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="e_dreif_los")%>%pull()%>%round(),
+                                                sum(
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="innk_los")%>%pull()%>%round(),
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="dreif_los")%>%pull()%>%round(),
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="flutn_los")%>%pull()%>%round(),
+                                                  temp2()%>%filter(tegundir == "Tilbúinn áburður" & name=="e_dreif_los")%>%pull()%>%round()
+                                                )
                          )
     )
     
@@ -422,6 +491,8 @@ server <- function(input, output, session){
     
     los_tafla
   })
+  
+
   
   output$kostn_tafla_hekt <- renderDataTable(datatable(kostntafla(), class='hover', rownames = FALSE,
                                                        options = list(dom='t'))%>%
