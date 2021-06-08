@@ -38,7 +38,7 @@ ui <- fluidPage(
                 )),
     br(),
     
-    sliderInput("hekt","Stærð uppgræðslusvæðis (ha)", min=0, max=200, value=100, step=10),
+    sliderInput("hekt","Stærð uppgræðslusvæðis (ha)", min=0, max=400, value=100, step=10),
     
     br(),
     
