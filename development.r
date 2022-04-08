@@ -7,7 +7,7 @@ library(shinyWidgets)
 library(DT)
 library(ggrepel)
 
-forsendur <-  read_xlsx("heimildir.xlsx", sheet = 1)
+forsendur <-  read_xlsx("heimildir_2022.xlsx", sheet = 1)
 
 ui <- fluidPage(
   theme = shinytheme("cosmo"),
@@ -328,21 +328,21 @@ server <- function(input, output, session){
   
   output$kostn_mynd <-  renderPlotly({
     
-    plot_ly(plot_df_kost(), x=~tegundir, y=~flutn_kost, type='bar', name='Flutningskostnaður',hoverinfo = 'text',
-            text="Kostnaður við flutning",
+    plot_ly(plot_df_kost(), x=~tegundir, y=~flutn_kost, type='bar', name='Flutningur',hoverinfo = 'name',
+            #text="Kostnaður við flutning",
             marker = list(color='rgb(0,0,0)',line=list(color = 'rgb(0,0,0)', width=0)))%>%
-      add_trace(y = ~dreif_kost, name="Dreifingarkostnaður",hoverinfo = 'text',
-                text="Kostnaður við dreifingu",
+      add_trace(y = ~dreif_kost, name="Dreifing",hoverinfo = 'name',
+                #text="Kostnaður við dreifingu",
                 marker=list(color='rgb(247,245,173)',
                             line=list(color = 'rgb(247,245,173)', width=0)))%>%
-      add_trace(y = ~innk_kost, name = "Innkaupakostnaður",hoverinfo = 'text',
-                text="Kostnaður við innkaup", 
+      add_trace(y = ~innk_kost, name = "Innkaup",hoverinfo = 'name',
+                #text="Kostnaður við innkaup", 
                 marker=list(color='rgb(199,207,216)',
                             line=list(color = 'rgb(199,207,216)', width=0)))%>%
       layout(yaxis =list(title="Kostnaður"), 
              xaxis = list(title = ""),
              barmode='stack',
-             hovermode = 'compare',showlegend = FALSE)%>%
+             hovermode = 'x',showlegend = FALSE)%>%
       add_annotations(x = 0.1,
                       y=kost_y_lifr()*1.2,
                       text=paste0("Kg/ha: ",round(magn_hekt_lifr()),"<br>Heildarmagn: ", round(tot_magn_lifr()/1000), " tonn"),
@@ -357,25 +357,25 @@ server <- function(input, output, session){
   
   output$losun_mynd <-  renderPlotly({
     
-    plot_ly(plot_df_los(), x=~tegundir, y=~flutn_los, type='bar', name='Losun vegna flutnings',hoverinfo = 'text',
-            text="Losun vegna flutnings",
+    plot_ly(plot_df_los(), x=~tegundir, y=~flutn_los, type='bar', name='Flutningur',hoverinfo = 'name',
+            #text="Losun vegna flutnings",
             marker = list(color='rgb(0,0,0)',line=list(color = 'rgb(0,0,0)', width=0)))%>%
-      add_trace(y = ~dreif_los, name="Losun vegna dreifingar",hoverinfo = 'text',
-                text="Losun vegna dreifingar",
+      add_trace(y = ~dreif_los, name="Dreifing",hoverinfo = 'name',
+                #text="Losun vegna dreifingar",
                 marker=list(color='rgb(247,245,173)',
                             line=list(color = 'rgb(247,245,173)', width=0)))%>%
-      add_trace(y = ~innk_los, name = "Losun vegna framleiðslu",hoverinfo = 'text',
-                text="Losun vegna framleiðslu",
+      add_trace(y = ~innk_los, name = "Framleiðsla",hoverinfo = 'name',
+                #text="Losun vegna framleiðslu",
                 marker=list(color='rgb(199,207,216)',
                             line=list(color = 'rgb(199,207,216)', width=0)))%>%
-      add_trace(y = ~e_dreif_los, name = "Losun eftir dreifingu",hoverinfo = 'text',
-                text="Losun eftir dreifingu",
+      add_trace(y = ~e_dreif_los, name = "Eftir dreif.",hoverinfo = 'name',
+                #text="Losun eftir dreifingu",
                 marker=list(color='rgb(5,166,107)',
                             line=list(color = 'rgb(5,166,107)', width=0)))%>%
       layout(yaxis =list(title= "Kg CO2 ígildi"),
              xaxis = list(title = ""),
              barmode='stack',
-             hovermode = 'compare',showlegend = FALSE)
+             hovermode = 'x',showlegend = FALSE)
     # %>%
     #   add_annotations(x = 0.1,
     #                   y=los_y_lifr()+(los_y_tilb()*0.2),
